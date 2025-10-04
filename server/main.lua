@@ -1,5 +1,35 @@
 local Config = Config or {}
 
+local ESX
+
+local function fetchESX()
+    if ESX then
+        return ESX
+    end
+
+    if exports and exports['es_extended'] then
+        local ok, sharedObject = pcall(exports['es_extended'].getSharedObject, exports['es_extended'])
+        if ok and sharedObject then
+            ESX = sharedObject
+            return ESX
+        end
+    end
+
+    local legacyObject
+    TriggerEvent('esx:getSharedObject', function(obj)
+        legacyObject = obj
+    end)
+
+    if legacyObject then
+        ESX = legacyObject
+        return ESX
+    end
+
+    return nil
+end
+
+fetchESX()
+
 local DAY_SECONDS = 86400
 local MONTH_PERIOD = math.max(1, Config.MonthlyPeriodDays or 30)
 
@@ -65,12 +95,14 @@ local function isJobAllowed(src)
         return true
     end
 
-    if not ESX or not ESX.GetPlayerFromId then
+    local esxObject = ESX or fetchESX()
+
+    if not esxObject or type(esxObject.GetPlayerFromId) ~= 'function' then
         print('^3[RecurringBilling]^0 Upozornění: Konfigurace vyžaduje ověření jobu, ale ESX nebyl nalezen. Povoluji všem pro jistotu.')
         return true
     end
 
-    local xPlayer = ESX.GetPlayerFromId(src)
+    local xPlayer = esxObject.GetPlayerFromId(src)
     if not xPlayer or not xPlayer.job then
         return false
     end
@@ -230,7 +262,9 @@ RegisterNetEvent('recurring_billing:createRecurringInvoice', function(payload)
     local identifier = identifierInput:lower()
 
     if identifier:match('^%d+$') then
-        if not ESX or type(ESX.GetPlayerFromId) ~= 'function' then
+        local esxObject = ESX or fetchESX()
+
+        if not esxObject or type(esxObject.GetPlayerFromId) ~= 'function' then
             notifyPlayer(src, {
                 title = 'Termínové platby',
                 description = 'Serverové ID lze použít pouze pokud je dostupný ESX. Zadej prosím identifier ve tvaru charX:Y.',
@@ -240,7 +274,7 @@ RegisterNetEvent('recurring_billing:createRecurringInvoice', function(payload)
         end
 
         local targetSource = tonumber(identifier)
-        local xPlayer = targetSource and ESX.GetPlayerFromId(targetSource) or nil
+        local xPlayer = targetSource and esxObject.GetPlayerFromId(targetSource) or nil
         if not xPlayer then
             notifyPlayer(src, {
                 title = 'Termínové platby',
