@@ -1,8 +1,8 @@
 # Recurring Billing pro okokBilling s ox_target
 
 Tento resource přidává jednoduchý systém měsíčních faktur napojený na [`okokBilling`](https://okok.tebex.io/).
-Správci mohou přes stolní interakci z `ox_target` otevřít formulář z `ox_lib`, vyplnit identifier hráče ve tvaru `charX:Y`
-a částku, a skript následně každý měsíc automaticky vytvoří fakturu přes okokBilling.
+Správci mohou přes stolní interakci z `ox_target` otevřít formulář z `ox_lib`, vyplnit aktuální serverové ID online hráče
+nebo jeho identifier ve tvaru `charX:Y` a částku, a skript následně každý měsíc automaticky vytvoří fakturu přes okokBilling.
 
 ## Funkce
 
@@ -27,8 +27,16 @@ a částku, a skript následně každý měsíc automaticky vytvoří fakturu p�
 ## Použití
 
 1. Přijdi k definovanému stolu a stiskni interakci `ox_target`.
-2. Vyplň identifier hráče ve tvaru `charX:Y` (např. `char1:42`), částku v Kč/$ a případně vlastní label faktury.
-3. Po potvrzení se položka uloží a skript začne fakturovat každý měsíc.
+2. Vyplň buď aktuální serverové ID online hráče (např. `23`), nebo jeho `char` identifier (např. `char1:42`), částku v Kč/$ a
+   případně vlastní label faktury.
+3. Pokud zadáš serverové ID, skript se pokusí najít online hráče a automaticky převést jeho identifier na `charX:Y`. Jestliže
+   hráč není online, musíš jeho `char` identifier zadat ručně.
+4. Po potvrzení se položka uloží a skript začne fakturovat každý měsíc.
+
+### Příklady zadání
+
+- `17` – vytvoří fakturu pro hráče se serverovým ID 17, pokud je online a má platný identifier `charX:Y`.
+- `char2:15` – vytvoří fakturu pro daný identifier, vhodné pro offline hráče nebo pokud znáš konkrétní postavu.
 
 > Faktury se vytváří stejným způsobem, jako kdyby byly ručně vytvořeny v UI okokBilling.
 

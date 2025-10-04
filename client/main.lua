@@ -16,9 +16,9 @@ local function openRecurringDialog()
     local input = lib.inputDialog('Nová termínová platba', {
         {
             type = 'input',
-            label = 'Identifier hráče',
-            description = 'Zadej identifier ve tvaru char1:1',
-            placeholder = 'char1:1',
+            label = 'Hráč (server ID nebo charX:Y)',
+            description = 'Zadej aktuální serverové ID online hráče nebo jeho char identifier (např. 12 nebo char1:1).',
+            placeholder = '12 nebo char1:1',
             required = true
         },
         {
@@ -41,9 +41,9 @@ local function openRecurringDialog()
         return
     end
 
-    local identifier = input[1] and input[1]:lower() or ''
-    if not identifier:match('^char%d+:%d+$') then
-        notifyError('Identifier musí být ve tvaru charX:Y (např. char1:1).')
+    local identifier = input[1]
+    if type(identifier) ~= 'string' or identifier == '' then
+        notifyError('Musíš zadat serverové ID nebo identifier hráče.')
         return
     end
 
