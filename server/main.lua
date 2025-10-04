@@ -1,31 +1,50 @@
 local Config = Config or {}
 
 local ESX
+local esxWarningPrinted = false
 
 local function fetchESX()
     if ESX then
         return ESX
     end
 
+    local globalESX = rawget(_G, 'ESX')
+    if globalESX then
+        ESX = globalESX
+        return ESX
+    end
+
     if exports and exports['es_extended'] then
-        local ok, sharedObject = pcall(exports['es_extended'].getSharedObject, exports['es_extended'])
-        if ok and sharedObject then
-            ESX = sharedObject
+        local ok, result = pcall(function()
+            return exports['es_extended']:getSharedObject()
+        end)
+
+        if ok and result then
+            ESX = result
+            return ESX
+        elseif not ok then
+            print(('^1[RecurringBilling]^0 Chyba při získávání ESX přes export: %s'):format(result or 'Neznámá chyba'))
+        end
+    end
+
+    if not ESX then
+        local legacyObject
+        TriggerEvent('esx:getSharedObject', function(obj)
+            legacyObject = obj
+        end)
+
+        if legacyObject then
+            ESX = legacyObject
             return ESX
         end
     end
 
-    local legacyObject
-    TriggerEvent('esx:getSharedObject', function(obj)
-        legacyObject = obj
-    end)
-
-    if legacyObject then
-        ESX = legacyObject
-        return ESX
+    if not ESX and not esxWarningPrinted then
+        print('^3[RecurringBilling]^0 Upozornění: Nepodařilo se získat ESX shared object. Některé funkce mohou být omezené.')
+        esxWarningPrinted = true
     end
 
-    return nil
+    return ESX
 end
 
 fetchESX()
