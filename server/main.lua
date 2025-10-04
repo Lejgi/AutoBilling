@@ -24,6 +24,13 @@ end
 
 local dbDriver = getDatabaseDriver()
 
+local function trim(value)
+    if type(value) ~= 'string' then
+        return value
+    end
+    return value:match('^%s*(.-)%s*$')
+end
+
 local function dbFetch(query, params)
     if dbDriver == 'oxmysql' then
         return exports.oxmysql:fetchSync(query, params)
@@ -196,11 +203,85 @@ RegisterNetEvent('recurring_billing:createRecurringInvoice', function(payload)
         return
     end
 
-    local identifier = type(payload.identifier) == 'string' and payload.identifier:lower() or ''
+    local identifierInput = payload.identifier
+    if identifierInput == nil then
+        notifyPlayer(src, {
+            title = 'Termínové platby',
+            description = 'Musíš zadat serverové ID nebo identifier hráče.',
+            type = 'error'
+        })
+        return
+    end
+
+    if type(identifierInput) ~= 'string' then
+        identifierInput = tostring(identifierInput)
+    end
+
+    identifierInput = trim(identifierInput or '') or ''
+    if identifierInput == '' then
+        notifyPlayer(src, {
+            title = 'Termínové platby',
+            description = 'Musíš zadat serverové ID nebo identifier hráče.',
+            type = 'error'
+        })
+        return
+    end
+
+    local identifier = identifierInput:lower()
+
+    if identifier:match('^%d+$') then
+        if not ESX or type(ESX.GetPlayerFromId) ~= 'function' then
+            notifyPlayer(src, {
+                title = 'Termínové platby',
+                description = 'Serverové ID lze použít pouze pokud je dostupný ESX. Zadej prosím identifier ve tvaru charX:Y.',
+                type = 'error'
+            })
+            return
+        end
+
+        local targetSource = tonumber(identifier)
+        local xPlayer = targetSource and ESX.GetPlayerFromId(targetSource) or nil
+        if not xPlayer then
+            notifyPlayer(src, {
+                title = 'Termínové platby',
+                description = ('Hráč s ID %s není online. Pokud je offline, zadej jeho identifier ve tvaru charX:Y ručně.'):format(identifierInput),
+                type = 'error'
+            })
+            return
+        end
+
+        local resolvedIdentifier
+        if type(xPlayer.getIdentifier) == 'function' then
+            local ok, value = pcall(xPlayer.getIdentifier, xPlayer)
+            if ok then
+                resolvedIdentifier = value
+            end
+        end
+
+        if not resolvedIdentifier and type(xPlayer.identifier) == 'string' then
+            resolvedIdentifier = xPlayer.identifier
+        end
+
+        if type(resolvedIdentifier) == 'string' then
+            resolvedIdentifier = resolvedIdentifier:lower()
+        end
+
+        if not resolvedIdentifier or not resolvedIdentifier:match('^char%d+:%d+$') then
+            notifyPlayer(src, {
+                title = 'Termínové platby',
+                description = ('Nepodařilo se získat platný identifier pro hráče %s. Zadej prosím identifier ve tvaru charX:Y ručně.'):format(identifierInput),
+                type = 'error'
+            })
+            return
+        end
+
+        identifier = resolvedIdentifier
+    end
+
     if not identifier:match('^char%d+:%d+$') then
         notifyPlayer(src, {
             title = 'Termínové platby',
-            description = 'Identifier musí být ve tvaru charX:Y (např. char1:1).',
+            description = 'Identifier musí být ve tvaru charX:Y (např. char1:1). Pokud hráč není online, zadej jeho identifier ručně.',
             type = 'error'
         })
         return
