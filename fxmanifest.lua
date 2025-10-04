@@ -23,7 +23,5 @@ server_scripts {
 
 dependencies {
     'ox_lib',
-    'ox_target',
-    'okokBilling',
-    'es_extended'
+    'ox_target'
 }
