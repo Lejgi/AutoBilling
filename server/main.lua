@@ -113,7 +113,7 @@ local function isJobAllowed(src)
         return true
     end
 
-    local xPlayer = esxObject.GetPlayerFromId(src)
+    local xPlayer = esxObject:GetPlayerFromId(src)
     if not xPlayer or not xPlayer.job then
         return false
     end
@@ -160,7 +160,7 @@ local function sendInvoice(invoice)
 
         if esxObject and type(esxObject.GetPlayers) == 'function' then
             for _, id in pairs(esxObject.GetPlayers()) do
-                local xPlayer = esxObject.GetPlayerFromId(id)
+                local xPlayer = esxObject:GetPlayerFromId(id)
                 if xPlayer and xPlayer.identifier and xPlayer.identifier:lower() == invoice.identifier:lower() then
                     targetSource = id
                     break
@@ -314,7 +314,7 @@ RegisterNetEvent('recurring_billing:createRecurringInvoice', function(payload)
         end
 
         local targetSource = tonumber(identifier)
-        local xPlayer = targetSource and esxObject.GetPlayerFromId(targetSource) or nil
+        local xPlayer = targetSource and esxObject:GetPlayerFromId(targetSource) or nil
         if not xPlayer then
             notifyPlayer(src, {
                 title = 'Termínové platby',
